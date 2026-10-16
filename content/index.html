@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="./favicon.png" />
+  <link rel="stylesheet" href="./twikoo.css" />
+  <title>Twikoo 评论系统</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #f6f7f9;
+      color: #1f2328;
+      line-height: 1.6;
+    }
+    header { background: #fff; border-bottom: 1px solid #e6e8eb; padding: 18px 20px; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 18px; margin: 0 0 6px; font-weight: 600; }
+    .sub { font-size: 13px; color: #656d76; margin: 0; }
+    .nav { margin: 10px 0 0; font-size: 13px; }
+    .nav a {
+      color: #0969da; text-decoration: none; margin-right: 16px;
+      border: 1px solid #d0d7de; border-radius: 6px; padding: 4px 12px;
+      display: inline-block;
+    }
+    .nav a:hover { background: #f3f4f6; }
+    main { padding: 20px; }
+    .card {
+      background: #fff; border: 1px solid #e6e8eb;
+      border-radius: 10px; padding: 18px; margin-bottom: 16px;
+    }
+    .card h2 { font-size: 14px; margin: 0 0 10px; font-weight: 600; }
+    .tip { font-size: 13px; color: #656d76; margin: 0 0 12px; }
+    .snippet {
+      display: block; width: 100%; resize: vertical; min-height: 76px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px; line-height: 1.7;
+      background: #f0f1f3; color: #1f2328;
+      border: 1px solid #e6e8eb; border-radius: 8px; padding: 10px 12px;
+    }
+    .field { display:block; font-size:13px; color:#656d76; margin:0 0 10px; }
+    .field input {
+      margin-top:6px; width:100%; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:12px; padding:8px 10px; border:1px solid #d0d7de; border-radius:8px;
+      background:#fff; color:#1f2328;
+    }
+    .warn {
+      font-size:12.5px; color:#7a4b00; background:#fff8e6; border:1px solid #ffe1a8;
+      border-radius:8px; padding:9px 12px; margin:0 0 12px;
+    }
+    .copy {
+      margin-top: 10px; font-size: 12px; cursor: pointer;
+      padding: 6px 14px; border-radius: 6px;
+      border: 1px solid #d0d7de; background: #fff; color: #1f2328;
+    }
+    .copy:hover { background: #f3f4f6; }
+    ol { margin: 0; padding-left: 20px; font-size: 13px; color: #656d76; }
+    ol li { margin-bottom: 5px; }
+    .err {
+      display: none; font-size: 13px; color: #b42318;
+      background: #fff4f3; border: 1px solid #ffd7d2;
+      border-radius: 8px; padding: 10px 12px; margin-top: 12px;
+    }
+    /* twikoo 的管理抽屉关闭时停在 left:100%（父容器 overflow:hidden），
+       实测渲染在视口外。让它停在原位、仅靠自带的 visibility 隐藏：
+       既保留淡入过渡，也避免离屏元素影响窄屏排版与键盘 Tab 顺序。 */
+    .twikoo .tk-admin-container .tk-admin:not(.__show) { left: 0; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0d1117; color: #e6edf3; }
+      header, .card { background: #161b22; border-color: #30363d; }
+      .snippet { background: #21262d; border-color: #30363d; color: #e6edf3; }
+      .field input { background:#21262d; border-color:#30363d; color:#e6edf3; }
+      .warn { background:#2d2413; border-color:#5c4a1f; color:#e8c98a; }
+      .copy { background: #21262d; border-color: #30363d; color: #e6edf3; }
+      .copy:hover { background: #30363d; }
+      .nav a { background: #21262d; border-color: #30363d; color: #58a6ff; }
+      .nav a:hover { background: #30363d; }
+      .err { background: #2d1416; border-color: #6e2b2b; color: #ff9a9a; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Twikoo 评论系统</h1>
+      <p class="sub">自托管评论后台已就绪，下方即为评论组件。点右下角齿轮图标可设置管理员密码并进入管理面板。</p>
+      <p class="nav"><a href="./guide.html">使用指南</a><a href="./admin.html">管理后台</a></p>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+      <div class="card">
+        <h2>把评论组件嵌入你的静态站点</h2>
+        <p class="tip">把下面这段代码贴进你的网页即可启用评论（envId 已填好本应用地址）：</p>
+        <label class="field">公网访问地址（可选）：
+          <input id="public-base" type="text" spellcheck="false"
+                 placeholder="https://comment.example.com（留空则用当前打开本应用的地址）" />
+        </label>
+        <div class="warn" id="public-warn">
+          本应用默认只在你自己的网络里可达。要让<b>公网上的静态站点</b>用上评论，
+          需要先把本应用（至少 <code>/api/</code>、<code>twikoo.min.js</code>、<code>twikoo.css</code>、<code>owo.json</code>）
+          通过公网访问 / 端口转发 / 反向代理发布到互联网，再把那个公网地址填到上面 —— 代码里的地址会自动跟着换。
+          <a href="./guide.html" style="color:#7a4b00">看使用指南第三节</a>。
+        </div>
+        <textarea class="snippet" id="snippet" readonly rows="4"></textarea>
+        <button class="copy" id="copy">复制代码</button>
+      </div>
+
+      <div class="card">
+        <h2>使用步骤</h2>
+        <ol>
+          <li>在下方评论组件里点齿轮图标，按提示设置管理员密码。</li>
+          <li>用刚设置的密码登录管理面板，在「配置管理」里调整评论显示项。</li>
+          <li>复制上面的代码贴进静态站点，即可开始接收评论。</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2>评论预览</h2>
+        <div id="tcomment"></div>
+      </div>
+
+      <div class="err" id="err"></div>
+    </div>
+  </main>
+  <script src="./twikoo.min.js"></script>
+  <script>
+    (function () {
+      var snippet = document.getElementById('snippet');
+      var publicBase = document.getElementById('public-base');
+      var envId = location.origin + '/api/';
+
+      function normalizeBase(v) {
+        v = (v || '').trim();
+        if (!v) return location.origin;
+        if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
+        return v.replace(/\/+$/, '');
+      }
+      function renderSnippet() {
+        var base = normalizeBase(publicBase && publicBase.value);
+        snippet.value =
+          '<div id="tcomment"></div>\n' +
+          '<script src="' + base + '/twikoo.min.js"><\/script>\n' +
+          '<script>\n' +
+          'twikoo.init({ envId: "' + base + '/api/", el: "#tcomment", lang: "zh-CN" });\n' +
+          '<\/script>';
+      }
+      renderSnippet();
+      if (publicBase) publicBase.addEventListener('input', renderSnippet);
+
+      var copyBtn = document.getElementById('copy');
+      copyBtn.addEventListener('click', function () {
+        var done = function () {
+          copyBtn.textContent = '已复制';
+          setTimeout(function () { copyBtn.textContent = '复制代码'; }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(snippet.value).then(done, function () {
+            snippet.select(); document.execCommand('copy'); done();
+          });
+        } else {
+          snippet.select(); document.execCommand('copy'); done();
+        }
+      });
+
+      function fail(msg) {
+        var el = document.getElementById('err');
+        el.style.display = 'block';
+        el.textContent = '评论组件加载失败：' + msg;
+      }
+      if (typeof twikoo === 'undefined') { fail('twikoo.min.js 未加载'); return; }
+      try {
+        twikoo.init({ envId: envId, el: '#tcomment', lang: 'zh-CN' });
+      } catch (e) {
+        fail(e && e.message ? e.message : String(e));
+      }
+    })();
+  </script>
+</body>
+</html>
