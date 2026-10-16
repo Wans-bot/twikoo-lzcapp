@@ -1,0 +1,46 @@
+# Twikoo 留言系统的 LPK 自动更新配置（LazyCat GitHub Action）
+# 上游镜像：docker.io/imaegoo/twikoo，标签就是版本号本身（2.0.13、2.0.15）。
+# 归档版本 2.0.13-1 的镜像来自 imaegoo/twikoo:2.0.13，标签命名有实测证据。
+version: 1
+
+project:
+  root: .
+  build_config: lzc-build.yml
+  package_file: package.yml
+  output: dist/twikoo.lpk
+  target_arch: amd64
+
+update:
+  strategy: publish
+  allow_downgrade: false
+  version_source:
+    type: image
+    image: twikoo
+
+build:
+  # 本工程不做源码构建，LPK 内容来自仓库内的 content/ 与 Manifest
+  run_buildscript: false
+
+images:
+  - id: twikoo
+    target: service
+    service: twikoo
+    source: docker.io/imaegoo/twikoo
+    channel: stable
+    # 跟随整支 2.x.y 版本族
+    tag_regex: '^2\.\d+\.\d+$'
+    sort: semver
+    delivery:
+      # 官方商店只接受 lazycat：由平台远端复制到 registry.lazycat.cloud
+      mode: lazycat
+
+stores:
+  # 应用已建档且资料已审核，这里只提交新版本 LPK
+  official:
+    enabled: true
+    continue_if_newer_version: true
+    skip_if_version_exists: true
+    create_if_missing: false
+    changelog_locales: [zh, en]
+  private:
+    enabled: false
