@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="./favicon.png" />
+  <title>Twikoo 使用指南</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #f6f7f9; color: #1f2328; line-height: 1.75;
+    }
+    header { background: #fff; border-bottom: 1px solid #e6e8eb; padding: 18px 20px; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 18px; margin: 0 0 6px; font-weight: 600; }
+    .sub { font-size: 13px; color: #656d76; margin: 0; }
+    main { padding: 20px 20px 48px; }
+    .back { display: inline-block; font-size: 13px; color: #0969da; text-decoration: none; margin-bottom: 14px; }
+    .back:hover { text-decoration: underline; }
+    section {
+      background: #fff; border: 1px solid #e6e8eb;
+      border-radius: 10px; padding: 18px 20px; margin-bottom: 16px;
+    }
+    h2 { font-size: 15px; margin: 0 0 10px; font-weight: 600; }
+    h3 { font-size: 13px; margin: 16px 0 6px; font-weight: 600; color: #1f2328; }
+    p, li { font-size: 13.5px; color: #57606a; }
+    p { margin: 0 0 10px; }
+    ul, ol { margin: 0 0 10px; padding-left: 22px; }
+    li { margin-bottom: 4px; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px; background: #f0f1f3; border-radius: 4px; padding: 1.5px 5px;
+    }
+    pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px; line-height: 1.7;
+      background: #f0f1f3; border: 1px solid #e6e8eb;
+      border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 0 0 12px;
+    }
+    pre code { background: none; padding: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 0 0 12px; }
+    th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #e6e8eb; }
+    th { color: #656d76; font-weight: 600; background: #fafbfc; }
+    td code { font-size: 11.5px; }
+    .note {
+      font-size: 13px; color: #57606a;
+      background: #f6f8fa; border-left: 3px solid #d0d7de;
+      border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 0 0 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0d1117; color: #e6edf3; }
+      header, section { background: #161b22; border-color: #30363d; }
+      h3 { color: #e6edf3; }
+      p, li { color: #9ba7b4; }
+      code, pre { background: #21262d; border-color: #30363d; }
+      th { background: #1c2128; color: #9ba7b4; }
+      th, td { border-color: #30363d; }
+      .note { background: #1c2128; border-left-color: #30363d; color: #9ba7b4; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Twikoo 使用指南</h1>
+      <p class="sub">从零开始，把评论功能接到自己的静态站点上。</p>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+      <a class="back" href="./">← 返回评论主页</a>
+
+      <section>
+        <h2>一、设置管理员密码</h2>
+        <p>Twikoo 的评论后台是「自举」的：第一次进入时由你自己设定管理员密码，平台上没有默认账号。</p>
+        <ol>
+          <li>回到<a class="back" href="./" style="margin:0">评论主页</a>，找到评论组件。</li>
+          <li>点评论框右上角的<b>齿轮图标</b>，弹出「Twikoo 评论管理」。</li>
+          <li>输入两次相同的密码，点「注册」，即成为管理员。</li>
+          <li>之后再用齿轮图标进入，输入该密码登录管理面板。</li>
+        </ol>
+        <div class="note">
+          密码只保存在本应用的数据库里，忘记后需要重置。若不想让别人看到管理入口，可在
+          「配置管理 → 通用」里设置 <code>HIDE_ADMIN_CRYPT</code>（管理面板入口暗号），
+          设置后只有在「昵称」里输入该暗号，齿轮图标才会出现。
+        </div>
+      </section>
+
+      <section>
+        <h2>二、把评论接到静态站点</h2>
+        <p>Twikoo 采用「后端 + 前端组件」的结构：本应用就是后端，前端是官方提供的 <code>twikoo.min.js</code>。在你的页面里加上这三段即可：</p>
+        <pre><code>&lt;div id="tcomment"&gt;&lt;/div&gt;
+&lt;script src="本应用地址/twikoo.min.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  twikoo.init({
+    envId: "本应用地址/api/",
+    el: "#tcomment",
+    lang: "zh-CN"
+  });
+&lt;/script&gt;</code></pre>
+        <p>把 <code>本应用地址</code> 换成你在浏览器里打开本应用时看到的地址即可（主页上已经帮你拼好这段代码，直接复制更省事）。</p>
+        <h3>常见问题</h3>
+        <ul>
+          <li><b>评论不显示</b>：先确认 <code>envId</code> 结尾带 <code>/api/</code>，并且该地址能在浏览器里直接打开。</li>
+          <li><b>跨域报错</b>：如果你的站点与本应用不是同一个域名，在「配置管理 → 通用」的 <code>CORS_ALLOW_ORIGIN</code> 里填上你站点的地址（多个用英文逗号分隔）。</li>
+          <li><b>表情加载不出来</b>：本应用已内置表情包，无需外网；若你在 <code>EMOTION_CDN</code> 里改过地址，改回默认即可。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>三、公网站点要用这些评论，先把本应用发布到公网</h2>
+        <p>Twikoo 是「后端 + 前端组件」的结构：后端就是本应用。访客打开你的静态站点时，
+          浏览器会<b>直接从访客的浏览器</b>请求本应用的 <code>/api/</code>，所以
+          <b>本应用必须能被互联网访问到</b>——只在局域网里、或只在懒猫客户端里能打开是不够的。</p>
+        <h3>怎么做</h3>
+        <ol>
+          <li>给本应用配一条公网通道：用懒猫微服的公网访问 / 端口转发功能，或在你的 VPS 上做一层反向代理，
+            把公开域名指到本应用（至少覆盖 <code>/api/</code>、<code>twikoo.min.js</code>、<code>twikoo.css</code>、<code>owo.json</code>）。
+            <b>必须是 HTTPS</b>：静态站点如果是 https，浏览器会拦掉 http 的评论请求。</li>
+          <li>拿到公网地址后，回到<a class="back" href="./" style="margin:0">评论主页</a>，在「公网访问地址」输入框里填它，
+            生成的嵌入代码就会自动换成公网地址，复制粘贴即可。</li>
+          <li>若代码里还是形如 <code>https://twikoo.&lt;你的微服&gt;.heiyu.space</code> 的私网名字，
+            公网访客解析不到、评论必然加载失败 —— 请务必换成公网地址。</li>
+        </ol>
+        <div class="note">跨域：实测本应用默认允许跨域调用（响应会带上请求来源的
+          <code>Access-Control-Allow-Origin</code>）。若要收紧，在「配置管理 → 通用 → CORS 安全域名」里填你的站点地址
+          （多个用英文逗号分隔），之后只放行这些来源。</div>
+        <h3>只在内网站点用？</h3>
+        <p>那就不需要公网，直接使用当前打开的地址即可；此时公网访客访问不到评论，属于预期行为。</p>
+      </section>
+
+      <section>
+        <h2>四、管理面板能做什么</h2>
+        <table>
+          <thead>
+            <tr><th>页面</th><th>用途</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>评论管理</td><td>查看、搜索、置顶、隐藏、删除评论；支持按「全部 / 只看可见 / 只看隐藏」筛选。</td></tr>
+            <tr><td>配置管理</td><td>评论显示项、排序方式、头像与表情源、CORS 安全域名、违禁词与屏蔽词等。</td></tr>
+            <tr><td>导入 / 导出</td><td>把评论导出成 JSON 备份，或从其他 Twikoo 站点导入既有评论。</td></tr>
+          </tbody>
+        </table>
+        <div class="note">
+          面板里右侧有一列操作按钮：搜索、刷新、齿轮（进入管理）、其他设置。保存配置后立即生效，无需重启应用。
+        </div>
+      </section>
+
+      <section>
+        <h2>五、数据与备份</h2>
+        <ul>
+          <li>所有评论与配置都存放在本应用的持久化目录 <code>/lzcapp/var</code> 下，<b>升级应用不会丢失</b>。</li>
+          <li>数据库是内置的文件型数据库，不需要你另外准备 MySQL / PostgreSQL。</li>
+          <li>建议定期在「导入 / 导出」页导出一次评论 JSON 作为冷备份。</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
