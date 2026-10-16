@@ -1,0 +1,124 @@
+usage: |
+  Twikoo 是简洁、安全、免费的静态网站评论系统：本应用是评论后端 + 管理面板，把前端组件嵌进静态站点即可收评论。
+
+  【公网要求（重要）】
+  访客的浏览器会直接请求本应用的 /api/，所以公网上的站点要用评论，必须先把本应用发布到公网
+  （懒猫微服客户端的公网访问 / 端口转发，或自建反向代理，必须 HTTPS），然后在评论主页的「公网访问地址」里
+  填你的公网地址、复制生成的嵌入代码。代码里若是 https://twikoo.<你的微服>.heiyu.space 这类私网地址，
+  公网访客解析不到，评论一定加载失败；只在内网站点里用则不需要公网。
+
+  首次使用：打开首页 → 点评论组件右下角齿轮设置管理员密码 → 「管理后台」进管理面板（评论管理/配置管理/导入导出）。
+  说明：评论数据在 /lzcapp/var 下，升级不丢；导入导出在懒猫客户端里走网盘文件选择器；内置数据库与表情包，不依赖外网。
+application:
+  subdomain: twikoo
+  public_path:
+    - /api/
+    - /api/*
+    - /twikoo.min.js
+    - /twikoo.css
+    - /owo.json
+    - /favicon.png
+  health_check:
+    test_url: http://twikoo:8080/
+    disable: false
+    start_period: 60s
+    timeout: 5s
+  upstreams:
+    - location: /api/
+      backend: http://twikoo:8080
+      disable_trim_location: true
+    - location: /
+      backend: file:///lzcapp/pkg/content/
+  injects:
+    - id: lazycat-file-bridge
+      'on': request
+      auth_required: false
+      when:
+        - /__lazycat_file_bridge/*
+      do:
+        - src: |
+            const bridgePrefix = "/__lazycat_file_bridge";
+            const requestHost = String(ctx.request.host || "")
+              .split(":")[0]
+              .toLowerCase();
+            const firstDot = requestHost.indexOf(".");
+            const method = String(ctx.request.method || "").toUpperCase();
+
+            if (
+              firstDot <= 0 ||
+              !requestHost.endsWith(".heiyu.space") ||
+              !["GET", "HEAD", "PUT"].includes(method)
+            ) {
+              ctx.response.send(
+                ["GET", "HEAD", "PUT"].includes(method) ? 400 : 405,
+                "Invalid LazyCat file bridge request",
+              );
+              return;
+            }
+
+            const boxDomain = requestHost.slice(firstDot + 1);
+            const fileOrigin = "https://file." + boxDomain;
+            const targetPath =
+              "/files/home" + ctx.request.path.slice(bridgePrefix.length);
+
+            ctx.headers.del("Origin");
+            ctx.headers.del("Referer");
+            ctx.proxy.to(fileOrigin, {
+              path: targetPath,
+              query: ctx.request.raw_query,
+              use_target_host: true,
+              timeout_ms: 120000,
+              on_fail: "error",
+            });
+    - id: open-save-chooser
+      'on': browser
+      # 必须显式 false：默认 true 时，没有合法 SAFE_UID 的上下文（验收脚手架、以及某些客户端场景）
+      # 会把整条注入跳过 —— 表现就是「文件选择器好像没接上」。
+      auth_required: false
+      when:
+        - /*
+      do:
+        - src: >-
+            file:///lzcapp/pkg/content/lazycat-injects/lzc-file-chooser-inject.js
+          params:
+            diskRoot: /_lzc/files/home
+            fileBridgeRoot: /__lazycat_file_bridge
+            fallbackMime: application/octet-stream
+            locale: auto
+            hooks:
+              fileSystemAccess: true
+              fileInput: true
+              downloadAnchor: true
+            text:
+              zh-CN:
+                openTitle: 打开
+                saveTitle: 保存
+                cloudTab: 网盘文件
+                localTab: 本地文件
+                openLazyCat: 从懒猫打开
+                saveLazyCat: 保存至懒猫
+                cancel: 取消
+              en-US:
+                openTitle: Open
+                saveTitle: Save
+                cloudTab: Cloud files
+                localTab: Local files
+                openLazyCat: Open from LazyCat
+                saveLazyCat: Save to LazyCat
+                cancel: Cancel
+services:
+  twikoo:
+    image: registry.lazycat.cloud/wans/imaegoo/twikoo:5d8a3896a5833733
+    environment:
+      TWIKOO_DATA: /app/data
+      TZ: Asia/Shanghai
+    binds:
+      - /lzcapp/var/twikoo:/app/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q -O - http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
