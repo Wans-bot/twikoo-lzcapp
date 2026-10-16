@@ -1,5 +1,5 @@
 package: cloud.lazycat.app.twikoo
-version: 2.0.13-1
+version: 2.0.15
 name: Twikoo
 description: A simple, safe and free comment system for static websites.
 author: imaegoo
