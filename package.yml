@@ -1,0 +1,71 @@
+package: cloud.lazycat.app.twikoo
+version: 2.0.13-1
+name: Twikoo
+description: A simple, safe and free comment system for static websites.
+author: imaegoo
+license: MIT
+homepage: https://github.com/twikoojs/twikoo
+locales:
+  zh-CN:
+    name: Twikoo
+    description: "Twikoo 是一个简洁、安全、免费的静态网站评论系统，支持回复、点赞、点踩与表情，可嵌入静态站点。注意：评论后端需可从访客浏览器访问，用在公网站点时须先把本应用发布到公网，并用公网地址生成嵌入代码。"
+    usage: |
+      Twikoo 是一个简洁、安全、免费的静态网站评论系统：本应用就是它的评论后端 + 管理面板，
+      把前端组件嵌进你的静态站点就能收评论。
+
+      【公网要求（重要）】
+      Twikoo 是「后端 + 前端组件」结构：后端就是本应用，访客的浏览器会直接请求本应用的 /api/。
+      所以想让**公网上**的静态站点用上评论，必须先把本应用发布到公网（懒猫微服的公网访问 / 端口转发，
+      或你自己在 VPS 上做反向代理，且必须是 HTTPS），再用那个公网地址生成嵌入代码：
+      1. 打开评论主页，在「公网访问地址」里填你的公网地址；
+      2. 复制生成的嵌入代码贴到你的站点 —— 代码里的地址会自动换成公网地址；
+      3. 若代码里仍是 https://twikoo.<你的微服>.heiyu.space 这类私网地址，公网访客解析不到，评论一定加载失败。
+      只在内网站点里用的话不需要公网，直接用当前地址即可。
+
+      首次使用：
+      1. 打开首页看到评论组件，点右下角齿轮图标，按提示设置管理员密码
+      2. 打开「管理后台」进入管理面板（评论管理 / 配置管理 / 导入导出）
+      3. 复制首页生成的嵌入代码，贴进你的静态网站
+
+      说明：
+      - 评论数据保存在 /lzcapp/var 下，升级不会丢失
+      - 导入 / 导出在懒猫客户端里会弹出网盘文件选择器（选择文件 / 选择保存目录）
+      - 默认使用内置数据库与内置表情包，不依赖外网
+  en-US:
+    name: Twikoo
+    description: "A simple, safe and free comment system for static websites. Note: the backend must be reachable from visitors' browsers - for a public site, publish this app to the internet first and use that public address in the embed snippet."
+    usage: |
+      Twikoo provides a self-hosted commenting backend for static websites:
+      this app is the backend plus an admin panel; embed the front-end widget
+      into your static site to start collecting comments.
+
+      Public internet requirement (important):
+      Twikoo is "backend + front-end widget". The backend is this app, and every
+      visitor's browser requests this app's /api/ directly. So to use it on a
+      site that is reachable on the public internet, you must first publish this
+      app to the public internet (LazyCat public access / port forwarding, or
+      your own reverse proxy, HTTPS required) and then generate the embed
+      snippet with that public address:
+      1. Open the comment home page and fill your public address into the
+         "public base URL" field.
+      2. Copy the generated snippet into your site - the URLs inside follow the
+         address you typed.
+      3. If the snippet still contains a private name such as
+         https://twikoo.<your-box>.heiyu.space, public visitors cannot resolve
+         it and comments will always fail to load.
+      For an intranet-only site you do not need a public address.
+
+      Getting started:
+      1. Open the home page, click the gear icon in the comment widget and set
+         an admin password.
+      2. Open "Admin" to manage comments, configuration and import/export.
+      3. Copy the embed snippet from the home page into your static site.
+
+      Notes:
+      - Comment data lives under /lzcapp/var and survives upgrades.
+      - Import/export uses the LazyCat netdisk file picker inside the client.
+      - Built-in database and built-in emoji pack; no external services needed.
+permissions:
+  required:
+    - net.internet
+  optional: []
