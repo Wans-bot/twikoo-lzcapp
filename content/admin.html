@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="./favicon.png" />
+  <link rel="stylesheet" href="./twikoo.css" />
+  <title>Twikoo 管理后台</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #f6f7f9; color: #1f2328; line-height: 1.7;
+    }
+    header { background: #fff; border-bottom: 1px solid #e6e8eb; padding: 18px 20px; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 18px; margin: 0 0 6px; font-weight: 600; }
+    .sub { font-size: 13px; color: #656d76; margin: 0; }
+    main { padding: 20px 20px 48px; }
+    .back { display: inline-block; font-size: 13px; color: #0969da; text-decoration: none; margin-bottom: 14px; }
+    .back:hover { text-decoration: underline; }
+    .card {
+      background: #fff; border: 1px solid #e6e8eb;
+      border-radius: 10px; padding: 18px 20px; margin-bottom: 16px;
+    }
+    h2 { font-size: 15px; margin: 0 0 10px; font-weight: 600; }
+    p, li { font-size: 13.5px; color: #57606a; }
+    p { margin: 0 0 10px; }
+    ol { margin: 0 0 10px; padding-left: 22px; }
+    li { margin-bottom: 4px; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px; background: #f0f1f3; border-radius: 4px; padding: 1.5px 5px;
+    }
+    .open {
+      font-size: 13px; cursor: pointer; padding: 8px 18px; border-radius: 6px;
+      border: 1px solid #0969da; background: #0969da; color: #fff; font-weight: 500;
+    }
+    .open:hover { background: #0860ca; }
+    .hint { font-size: 12.5px; color: #8c959f; margin: 10px 0 0; }
+    .note {
+      font-size: 13px; color: #57606a;
+      background: #f6f8fa; border-left: 3px solid #d0d7de;
+      border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 12px 0 0;
+    }
+    /* 管理抽屉关闭时 twikoo 把它停在 left:100%，实测渲染在视口外。
+       改为停在原位、仅靠自带的 visibility 隐藏，避免离屏元素影响窄屏排版。 */
+    .twikoo .tk-admin-container .tk-admin:not(.__show) { left: 0; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0d1117; color: #e6edf3; }
+      header, .card { background: #161b22; border-color: #30363d; }
+      p, li { color: #9ba7b4; }
+      code { background: #21262d; }
+      .note { background: #1c2128; border-left-color: #30363d; color: #9ba7b4; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Twikoo 管理后台</h1>
+      <p class="sub">评论管理、配置管理、导入导出都在这里。</p>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+      <a class="back" href="./">← 返回评论主页</a>
+
+      <div class="card">
+        <h2>进入管理面板</h2>
+        <p>点击下面的按钮即可打开管理面板。首次使用会让你设置管理员密码，之后用该密码登录。</p>
+        <button class="open" id="open">打开管理面板</button>
+        <p class="hint" id="hint">正在准备评论组件…</p>
+        <div class="note">
+          管理面板也可以从评论组件的<b>齿轮图标</b>进入。若在「配置管理」里设置过
+          <code>HIDE_ADMIN_CRYPT</code> 暗号，则需要在评论「昵称」里输入该暗号后齿轮才会出现。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>管理面板包含</h2>
+        <ol>
+          <li><b>评论管理</b>：查看、搜索、置顶、隐藏、删除评论。</li>
+          <li><b>配置管理</b>：评论显示项、排序、头像与表情源、CORS 安全域名、违禁词等。</li>
+          <li><b>导入 / 导出</b>：导出评论 JSON 备份，或从其他 Twikoo 站点导入评论。</li>
+        </ol>
+      </div>
+
+      <div class="card" style="position:relative">
+        <h2>评论组件</h2>
+        <div id="tcomment"></div>
+      </div>
+    </div>
+  </main>
+  <script src="./twikoo.min.js"></script>
+  <script>
+    (function () {
+      var envId = location.origin + '/api/';
+      var hint = document.getElementById('hint');
+      var openBtn = document.getElementById('open');
+      var inited = false;
+
+      function gear() {
+        var icons = document.querySelectorAll('.tk-comments-actions .tk-icon');
+        return icons.length ? icons[icons.length - 1] : null;
+      }
+
+      // 评论组件初始化后，齿轮图标才存在；轮询等待再点击。
+      function openAdmin(attempt) {
+        attempt = attempt || 0;
+        var g = gear();
+        if (g) {
+          g.click();
+          hint.textContent = '管理面板已打开。首次使用请设置管理员密码。';
+          return;
+        }
+        if (attempt > 40) {
+          hint.textContent = '评论组件尚未就绪，请稍候重试，或回到主页点评论框的齿轮图标。';
+          return;
+        }
+        setTimeout(function () { openAdmin(attempt + 1); }, 250);
+      }
+
+      openBtn.addEventListener('click', function () { openAdmin(0); });
+
+      if (typeof twikoo === 'undefined') {
+        hint.textContent = 'twikoo.min.js 未加载，请刷新页面重试。';
+        return;
+      }
+      try {
+        twikoo.init({ envId: envId, el: '#tcomment', lang: 'zh-CN' });
+        inited = true;
+        hint.textContent = '评论组件已就绪，点上面的按钮进入管理面板。';
+      } catch (e) {
+        hint.textContent = '评论组件加载失败：' + (e && e.message ? e.message : String(e));
+      }
+    })();
+  </script>
+</body>
+</html>
