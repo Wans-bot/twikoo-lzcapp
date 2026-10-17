@@ -7,4 +7,4 @@
 - 上游：https://github.com/twikoojs/twikoo（MIT）
 - 应用镜像：`docker.io/imaegoo/twikoo`，版本族 2.x.y
 - 平台凭据：仓库 Secret `LZC_API_TOKEN`（开发者中心 PAT），不写入文件
-- 实机验收与商店截图仍在本机与盒子上完成，见懒猫知识库 `10-打包LPK/skill/实测记录/`
+- 实机验收与商店截图仍在本机与盒子上完成，见懒猫知识库 `records/`
