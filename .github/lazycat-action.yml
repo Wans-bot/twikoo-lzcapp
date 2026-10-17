@@ -11,12 +11,21 @@ update:
   strategy: publish
   allow_downgrade: false
   version_source:
-    type: git   # 自建/无上游镜像：版本由本仓库 tag 决定
-
+    type: image
+    image: app
 build:
   run_buildscript: false
 
-images: []
+images:
+  - id: app
+    target: service
+    service: twikoo
+    source: docker.io/imaegoo/twikoo
+    channel: stable
+    tag_regex: '^v?\d+\.\d+\.\d+$'
+    sort: semver
+    delivery:
+      mode: lazycat
 
 stores:
   official:
