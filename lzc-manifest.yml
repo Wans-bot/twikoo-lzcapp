@@ -108,8 +108,8 @@ application:
                 cancel: Cancel
 services:
   twikoo:
-    # upstream: docker.io/imaegoo/twikoo:2.0.15
-    image: registry.lazycat.cloud/wans/imaegoo/twikoo:a67d28a8bdcbf52d
+    # upstream: docker.io/imaegoo/twikoo:2.0.16
+    image: registry.lazycat.cloud/wans/imaegoo/twikoo:9134872c08c4215d
     environment:
       TWIKOO_DATA: /app/data
       TZ: Asia/Shanghai
