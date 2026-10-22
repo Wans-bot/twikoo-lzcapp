@@ -29,6 +29,9 @@ images:
 
 stores:
   official:
+    changelog_locales:
+      - zh
+      - en
     enabled: true
     skip_if_version_exists: true
     create_if_missing: false
